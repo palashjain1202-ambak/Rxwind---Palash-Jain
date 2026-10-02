@@ -30,9 +30,22 @@ export async function generateJSON<T>(parts: Part[], schema: object, opts: { tem
       lastErr = e;
       const msg = String((e as Error)?.message ?? e);
       // Try the next model on not-found, quota or transient errors
-      if (/404|not found|NOT_FOUND|429|RESOURCE_EXHAUSTED|500|503|UNAVAILABLE|overloaded|deprecated/i.test(msg)) continue;
+      if (/400|INVALID_ARGUMENT|404|not found|NOT_FOUND|429|RESOURCE_EXHAUSTED|500|503|UNAVAILABLE|overloaded|deprecated/i.test(msg)) continue;
       if (e instanceof SyntaxError) continue;
       throw e;
+    }
+  }
+  // Last resort: same request without the strict schema (JSON mode only)
+  for (const model of models.slice(0, 2)) {
+    try {
+      const res = await ai.models.generateContent({
+        model,
+        contents: [{ role: "user", parts: [...parts, { text: "Respond with JSON only, matching this schema: " + JSON.stringify(schema) }] }],
+        config: { responseMimeType: "application/json", temperature: opts.temperature ?? 0.1 },
+      });
+      return JSON.parse((res.text ?? "").replace(/^```json\s*|```$/g, "")) as T;
+    } catch (e) {
+      lastErr = e;
     }
   }
   throw lastErr ?? new Error("All models failed");

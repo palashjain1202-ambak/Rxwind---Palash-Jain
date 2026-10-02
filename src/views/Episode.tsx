@@ -57,6 +57,9 @@ export default function EpisodeView({ id }: { id: string }) {
               <span className="rounded-full px-2.5 py-1 text-xs font-bold text-white" style={{ background: col.fg }}>
                 {categoryLabel[lang][e.category]}
               </span>
+              <Chip tone={e.status === "resolved" ? "mint" : e.status === "active" ? "amber" : "sky"}>
+                {e.status === "resolved" ? t("resolvedIn", { n: episodeDays(e) }) : e.status === "active" ? t("active") : t("ongoing")}
+              </Chip>
               {member && <Chip>{member.relation[lang] === "You" || member.relation[lang] === "आप" ? member.name : member.relation[lang]}</Chip>}
               {e.city && (
                 <Chip>
@@ -181,6 +184,21 @@ export default function EpisodeView({ id }: { id: string }) {
                 </>
               )}
             </div>
+          )}
+          {e.status === "resolved" && !e.outcome && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-[26px] bg-[linear-gradient(135deg,#3dbb55,#1f8a3b)] p-6 text-white"
+            >
+              <CircleCheckBig className="size-7" />
+              <p className="font-display mt-3 text-xl font-semibold">
+                {lang === "hi" ? `${episodeDays(e)} दिन में ठीक। यह आपकी मेमोरी में सेव है।` : `Recovered in ${episodeDays(e)} days. Saved to your memory.`}
+              </p>
+              <p className="mt-1 text-sm text-white/80">
+                {lang === "hi" ? "ऊपर बताएँ कि कौन सी दवा काम आई।" : "Mark which medicines helped so next time is easier."}
+              </p>
+            </motion.div>
           )}
           {e.outcome && (
             <Reveal>

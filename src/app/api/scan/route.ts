@@ -92,23 +92,34 @@ export async function POST(req: Request) {
       [{ text: PROMPT }, ...imgs.map((i) => ({ inlineData: { data: i.data, mimeType: i.mimeType || "image/jpeg" } }))],
       schema,
     );
+    const cat = CATEGORIES.includes(raw.category) ? raw.category : "other";
     const result: ScanResult = {
       ...raw,
+      isPrescription: raw.isPrescription !== false,
+      legibility: raw.legibility ?? "partly",
+      doctor: raw.doctor || "Doctor",
+      category: cat as ScanResult["category"],
+      episodeTitle: {
+        en: raw.episodeTitle?.en || raw.diagnosis || "New episode",
+        hi: raw.episodeTitle?.hi || raw.episodeTitle?.en || raw.diagnosis || "नई बीमारी",
+      },
+      advice: Array.isArray(raw.advice) ? raw.advice : [],
+      warnings: Array.isArray(raw.warnings) ? raw.warnings : [],
       medicines: (raw.medicines ?? []).map((m) => {
         let slots = { morning: !!m.morning, afternoon: !!m.afternoon, evening: !!m.evening, night: !!m.night };
         if (!m.sos && !Object.values(slots).some(Boolean) && m.frequencyCode) slots = slotsFromCode(m.frequencyCode);
         return {
-          name: m.name,
+          name: m.name || "Medicine",
           generic: m.generic,
           strength: m.strength,
-          form: m.form ?? "other",
-          dose: m.dose,
+          form: FORMS.includes(m.form) ? m.form : "other",
+          dose: m.dose || "As directed",
           frequencyCode: m.frequencyCode,
           slots,
           sos: !!m.sos,
-          food: m.food ?? "any",
+          food: (["before", "after", "with", "empty", "any"] as const).includes(m.food) ? m.food : "any",
           durationDays: m.durationDays ?? null,
-          purpose: { en: m.purposeEn, hi: m.purposeHi },
+          purpose: { en: m.purposeEn || "", hi: m.purposeHi || m.purposeEn || "" },
           confidence: Math.max(0, Math.min(1, Number(m.confidence ?? 0.6))),
         };
       }),

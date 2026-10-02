@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useScroll, useSpring } from "motion/react";
-import { useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useScroll, useSpring } from "motion/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Rewind as RewindIcon } from "lucide-react";
 import { useMemory } from "@/lib/store";
 import { catColor, episodeDays, episodeMeds, memberEpisodes } from "@/lib/insights";
@@ -113,15 +113,15 @@ function TimelineItem({ e, side }: { e: Episode; side: "left" | "right" }) {
   const helped = meds.filter((m) => m.verdict === "helped");
   const bad = meds.filter((m) => m.verdict === "no-change" || m.verdict === "side-effect");
   return (
-    <div className={cx("relative flex md:w-1/2", side === "left" ? "md:pr-10" : "md:ml-auto md:pl-10")}>
+    <div id={`ep-card-${e.id}`} className={cx("relative flex scroll-mt-28 md:w-1/2", side === "left" ? "md:pr-10" : "md:ml-auto md:pl-10")}>
       <motion.span
         initial={{ scale: 0 }}
         whileInView={{ scale: 1 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ type: "spring", stiffness: 400, damping: 18 }}
         className={cx(
-          "absolute left-[8px] top-5 z-10 size-4 rounded-full border-[3px] border-canvas md:left-auto",
-          side === "left" ? "md:-right-2" : "md:-left-2",
+          "absolute left-[8px] top-5 z-10 size-4 rounded-full border-[3px] border-canvas",
+          side === "left" ? "md:left-auto md:right-[-8px]" : "md:left-[-8px]",
         )}
         style={{ background: col.fg, boxShadow: `0 0 0 4px ${col.bg}` }}
       />
@@ -179,54 +179,157 @@ function TimelineItem({ e, side }: { e: Episode; side: "left" | "right" }) {
 }
 
 function Tape({ episodes }: { episodes: Episode[] }) {
-  const { lang, go } = useMemory();
+  const { lang } = useMemory();
+  const [hover, setHover] = useState<string | null>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scroller.current;
+    if (el && el.scrollWidth > el.clientWidth) el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+  }, []);
   if (!episodes.length) return null;
+
   const now = new Date();
   const start = new Date(Math.min(...episodes.map((e) => parseISO(e.startDate).getTime())));
   start.setDate(1);
+  start.setMonth(start.getMonth() - 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 15);
+  const span = end.getTime() - start.getTime();
+  const pct = (d: Date) => ((d.getTime() - start.getTime()) / span) * 100;
+
   const months: Date[] = [];
-  for (const d = new Date(start); d <= now; d.setMonth(d.getMonth() + 1)) months.push(new Date(d));
-  const span = now.getTime() - start.getTime();
-  const pos = (s: string) => ((parseISO(s).getTime() - start.getTime()) / span) * 100;
+  for (const d = new Date(start); d <= end; d.setMonth(d.getMonth() + 1)) months.push(new Date(d));
+  const nowPct = pct(now);
+  const sorted = [...episodes].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  const hovered = sorted.find((e) => e.id === hover);
+
+  const jump = (id: string) => {
+    const el = document.getElementById(`ep-card-${id}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.animate(
+      [
+        { transform: "scale(1)", filter: "drop-shadow(0 0 0 rgba(55,178,77,0))" },
+        { transform: "scale(1.02)", filter: "drop-shadow(0 0 18px rgba(55,178,77,.55))" },
+        { transform: "scale(1)", filter: "drop-shadow(0 0 0 rgba(55,178,77,0))" },
+      ],
+      { duration: 1400, delay: 450, easing: "ease-in-out" },
+    );
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card mt-6 p-4">
-      <div className="relative h-16">
-        <div className="absolute inset-x-0 top-7 h-[3px] rounded-full bg-ink/[0.07]" />
-        {months.map((m, i) => (
-          <div key={i} className="absolute top-0 -translate-x-1/2 text-center" style={{ left: `${(i / Math.max(1, months.length - 1)) * 100}%` }}>
-            {(m.getMonth() === 0 || i === 0 || i === months.length - 1) && (
-              <span className="block font-mono text-[0.62rem] font-semibold text-ink-3">
-                {monthsShort[lang][m.getMonth()]} {String(m.getFullYear()).slice(2)}
-              </span>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative mt-6 overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,rgba(255,255,255,.92),rgba(234,247,237,.85))] shadow-[var(--shadow-soft)]"
+    >
+      {/* header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-4 md:px-6">
+        <div className="text-sm font-semibold text-ink-2">
+          {lang === "hi" ? "आपकी टाइमलाइन" : "Your timeline"}
+          <span className="ml-2 font-normal text-ink-3">
+            {monthsShort[lang][months[0].getMonth()]} {months[0].getFullYear()} → {lang === "hi" ? "आज" : "today"}
+          </span>
+        </div>
+        <div className="h-5 text-xs text-ink-3">
+          <AnimatePresence mode="wait">
+            {hovered ? (
+              <motion.span key={hovered.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="inline-flex items-center gap-1.5 font-semibold text-ink">
+                <span className="size-2 rounded-full" style={{ background: catColor[hovered.category].fg }} />
+                {hovered.title} · {parseISO(hovered.startDate).getDate()} {monthsShort[lang][parseISO(hovered.startDate).getMonth()]} {parseISO(hovered.startDate).getFullYear()}
+              </motion.span>
+            ) : (
+              <motion.span key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                {lang === "hi" ? "किसी बीमारी पर टैप करें" : "Tap an illness to jump to it"}
+              </motion.span>
             )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* scroll area (scrolls sideways on small screens) */}
+      <div ref={scroller} className="no-scrollbar overflow-x-auto">
+        <div className="relative mx-5 min-w-[680px] pb-4 pt-9 md:mx-6">
+          {/* month grid + labels */}
+          <div className="absolute inset-x-0 bottom-4 top-9">
+            {months.map((m, i) => {
+              const left = pct(m);
+              const isJan = m.getMonth() === 0;
+              return (
+                <div key={i} className="absolute top-0 h-full" style={{ left: `${left}%` }}>
+                  <div className={cx("absolute top-0 h-[calc(100%-22px)] w-px", isJan ? "bg-ink/15" : "bg-ink/[0.06]")} />
+                  <div className={cx("absolute bottom-0 -translate-x-1/2 whitespace-nowrap text-[0.68rem]", isJan ? "font-bold text-ink-2" : "text-ink-3")}>
+                    {monthsShort[lang][m.getMonth()]}
+                  </div>
+                  {(isJan || i === 0) && (
+                    <div className="absolute -top-7 whitespace-nowrap rounded-full bg-ink px-2 py-0.5 text-[0.62rem] font-bold text-white">
+                      {m.getFullYear()}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        ))}
-        {episodes.map((e, i) => {
-          const l = pos(e.startDate);
-          const r = pos(e.endDate ?? new Date().toISOString().slice(0, 10));
-          return (
-            <motion.button
-              key={e.id}
-              title={e.title}
-              onClick={() => go({ name: "episode", id: e.id })}
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.3 + i * 0.06, type: "spring", stiffness: 200, damping: 22 }}
-              whileHover={{ scaleY: 1.6 }}
-              className="absolute top-[22px] h-3 origin-left rounded-full"
-              style={{ left: `${l}%`, width: `max(10px, ${r - l}%)`, background: catColor[e.category].fg }}
+
+          {/* track */}
+          <div className="relative h-14">
+            <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-ink/[0.06]" />
+            {/* elapsed fill up to today */}
+            <motion.div
+              className="absolute left-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-[linear-gradient(90deg,rgba(55,178,77,.15),rgba(55,178,77,.45))]"
+              initial={{ width: 0 }}
+              animate={{ width: `${nowPct}%` }}
+              transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
             />
-          );
-        })}
-        <motion.div
-          className="absolute top-[16px] -ml-[9px] grid size-[18px] place-items-center rounded-full bg-coral shadow-[var(--shadow-glow)]"
-          initial={{ left: "100%" }}
-          animate={{ left: ["100%", "0%", "0%", "100%"], scale: [1, 1.3, 1.3, 1] }}
-          transition={{ duration: 3.2, times: [0, 0.45, 0.55, 1], ease: "easeInOut", delay: 0.6 }}
-        >
-          <span className="size-1.5 rounded-full bg-white" />
-        </motion.div>
-        <div className="absolute bottom-0 right-0 font-mono text-[0.62rem] font-semibold text-coral">{lang === "hi" ? "आज" : "now"}</div>
+            {sorted.map((e, i) => {
+              const l = pct(parseISO(e.startDate));
+              const r = pct(e.endDate ? parseISO(e.endDate) : now);
+              const col = catColor[e.category];
+              const on = hover === e.id;
+              return (
+                <motion.button
+                  key={e.id}
+                  aria-label={e.title}
+                  onMouseEnter={() => setHover(e.id)}
+                  onMouseLeave={() => setHover(null)}
+                  onFocus={() => setHover(e.id)}
+                  onBlur={() => setHover(null)}
+                  onClick={() => jump(e.id)}
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  transition={{ delay: 0.4 + i * 0.08, type: "spring", stiffness: 220, damping: 22 }}
+                  className={cx(
+                    "absolute top-1/2 origin-left -translate-y-1/2 rounded-full outline-none",
+                    e.category === "chronic" ? "h-1.5 opacity-40" : "h-4",
+                  )}
+                  style={{
+                    left: `${l}%`,
+                    width: `max(16px, ${r - l}%)`,
+                    background: `linear-gradient(90deg, ${col.fg}, ${col.fg}cc)`,
+                    boxShadow: on ? `0 0 0 4px ${col.bg}, 0 6px 16px -4px ${col.fg}` : e.category === "chronic" ? "none" : `0 2px 6px -2px ${col.fg}99`,
+                    zIndex: on ? 10 : e.category === "chronic" ? 0 : 1,
+                  }}
+                  whileHover={{ scaleY: 1.35 }}
+                />
+              );
+            })}
+            {/* today marker */}
+            <div className="absolute top-0 h-full" style={{ left: `${nowPct}%` }}>
+              <div className="absolute -top-1 bottom-0 w-[2px] -translate-x-1/2 rounded-full bg-leaf" />
+              <span className="absolute top-1/2 grid size-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-leaf shadow-[0_0_0_4px_rgba(55,178,77,.2)]">
+                <span className="size-2 rounded-full bg-white" />
+              </span>
+              <motion.span
+                className="absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-leaf"
+                animate={{ scale: [1, 2.2], opacity: [0.7, 0] }}
+                transition={{ duration: 1.8, repeat: Infinity }}
+              />
+              <span className="absolute -top-7 -translate-x-1/2 whitespace-nowrap rounded-full bg-leaf px-2 py-0.5 text-[0.62rem] font-bold text-white">
+                {lang === "hi" ? "आज" : "Today"}
+              </span>
+            </div>
+          </div>
+          <div className="h-6" />
+        </div>
       </div>
     </motion.div>
   );

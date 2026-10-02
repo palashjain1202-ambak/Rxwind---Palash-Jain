@@ -268,3 +268,8 @@ body {
   color: transparent;
   animation: grad-pan 6s linear infinite;
 }
+
+html,
+body {
+  overflow-x: clip;
+}
