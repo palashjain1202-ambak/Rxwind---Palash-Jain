@@ -88,7 +88,7 @@ export const SAMPLES: Sample[] = [
       clinic: "Smile Dental Care, Malviya Nagar",
       date: "2026-09-30",
       patientName: "Sunita",
-      diagnosis: "Tooth pain, lower left molar — root canal started",
+      diagnosis: "Tooth pain in a lower left molar, root canal started",
       category: "infection",
       episodeTitle: { en: "Tooth pain (root canal)", hi: "दाँत दर्द (रूट कैनाल)" },
       medicines: [
@@ -99,7 +99,7 @@ export const SAMPLES: Sample[] = [
       ],
       advice: ["Avoid chewing on the left side", "Next sitting on 7 Oct"],
       followUp: "2026-10-07",
-      warnings: ["'Mox' is amoxicillin — a penicillin. Check allergy history.", "Ketorolac is an NSAID; avoid if you have kidney issues or acidity."],
+      warnings: ["'Mox' is amoxicillin, which is a penicillin. Check allergy history.", "Ketorolac is an NSAID; avoid if you have kidney issues or acidity."],
     },
   },
 ];

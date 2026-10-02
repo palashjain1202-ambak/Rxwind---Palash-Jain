@@ -9,13 +9,13 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000"),
-  title: "Rxwind — Remember what worked",
+  title: "Rxwind | Remember what worked",
   description:
     "Snap every prescription. Rxwind turns your parchis into a health memory: dose plans, what worked, what didn't, and what's coming back this season.",
   applicationName: "Rxwind",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
   openGraph: {
-    title: "Rxwind — Remember what worked",
+    title: "Rxwind | Remember what worked",
     description: "Your health has a history. Rewind it.",
     images: ["/og.png"],
   },

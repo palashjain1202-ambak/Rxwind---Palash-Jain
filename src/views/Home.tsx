@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { ArrowRight, CircleAlert, CircleCheck, CircleX, FileText, Images, ScanLine, ShieldCheck, Wind } from "lucide-react";
 import { useMemory } from "@/lib/store";
 import { DosePlan, ProgressRing, useTodayProgress } from "@/components/DosePlan";
+import { CalendarButton } from "@/components/CalendarButton";
 import { CheckInCard } from "@/components/CheckIn";
 import { SeasonWheel, aqiBand, useAqi } from "@/components/SeasonWheel";
 import { EpisodeCard } from "@/components/EpisodeCard";
@@ -64,7 +65,7 @@ export default function Home() {
 
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Active episode + doses */}
-        <motion.section variants={fadeUp} className="card relative overflow-hidden p-4 md:p-6 lg:col-span-8">
+        <motion.section variants={fadeUp} className="card relative z-10 p-4 md:p-6 lg:col-span-8">
           {active ? (
             <>
               <div className="flex items-start justify-between gap-4">
@@ -96,7 +97,10 @@ export default function Home() {
                 {total > 0 && <ProgressRing done={done} total={total} />}
               </div>
               <div className="mt-5">
-                <div className="mb-3 text-[0.7rem] font-semibold text-ink-3">{t("todaysDoses")}</div>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-[0.7rem] font-semibold text-ink-3">{t("todaysDoses")}</div>
+                  <CalendarButton memberId={member.id} />
+                </div>
                 <DosePlan memberId={member.id} />
               </div>
               {active.status === "active" && (
@@ -219,7 +223,7 @@ function UpcomingNote({ u, aqi }: { u: ReturnType<typeof upcomingRisks>[number];
         {lang === "hi" ? (
           <>
             <b className="text-ink">{m} {y}</b> में आपको <b className="text-ink">{u.episode.title}</b> हुआ था
-            {u.episode.endDate ? <> — {Math.max(1, Math.round((parseISO(u.episode.endDate).getTime() - parseISO(u.episode.startDate).getTime()) / 864e5) + 1)} दिन</> : null}.
+            {u.episode.endDate ? <>, {Math.max(1, Math.round((parseISO(u.episode.endDate).getTime() - parseISO(u.episode.startDate).getTime()) / 864e5) + 1)} दिन</> : null}.
           </>
         ) : (
           <>
@@ -256,7 +260,7 @@ function LedgerCol({ title, icon, tone, meds, showFx }: { title: string; icon: R
           {title}
         </div>
         <div className="flex flex-col gap-2">
-          {meds.length === 0 && <span className="text-sm text-ink-3">—</span>}
+          {meds.length === 0 && <span className="text-sm text-ink-3">Nothing yet</span>}
           {meds.slice(0, 5).map((m) => (
             <div key={m.id} className="flex items-center gap-2.5">
               <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-canvas text-ink-2">

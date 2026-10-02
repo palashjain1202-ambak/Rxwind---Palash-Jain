@@ -90,7 +90,7 @@ export default function Brief({ episodeId }: { episodeId?: string }) {
 
   const plain = useMemo(() => {
     const L: string[] = [];
-    L.push(`*Rxwind health brief — ${member.name}${member.age ? `, ${member.age}` : ""}*`);
+    L.push(`*Rxwind health brief: ${member.name}${member.age ? `, ${member.age}` : ""}*`);
     if (focus) L.push(`Re: ${focus.title}`);
     L.push(`Allergies: ${member.allergies.join(", ") || "None known"}`);
     if (member.conditions.length) L.push(`Long-term: ${member.conditions.join(", ")}`);
@@ -98,11 +98,11 @@ export default function Brief({ episodeId }: { episodeId?: string }) {
     L.push(summary);
     if (current.length) {
       L.push("", "*Current medicines*");
-      for (const c of current) L.push(`• ${c.med.name}${c.med.generic ? ` (${c.med.generic})` : ""} — ${c.med.dose}, ${c.med.frequencyCode ?? ""}`);
+      for (const c of current) L.push(`• ${c.med.name}${c.med.generic ? ` (${c.med.generic})` : ""}: ${c.med.dose}, ${c.med.frequencyCode ?? ""}`);
     }
     L.push("", "*History*");
     for (const e of recent.slice(0, 8))
-      L.push(`• ${fmt(e.startDate, "en")}: ${e.title} — ${e.prescriptions.map((p) => p.doctor).join(" → ")} — ${e.status === "resolved" ? `${episodeDays(e)} days` : e.status}`);
+      L.push(`• ${fmt(e.startDate, "en")}: ${e.title}, ${e.prescriptions.map((p) => p.doctor).join(" → ")}, ${e.status === "resolved" ? `${episodeDays(e)} days` : e.status}`);
     L.push("", "_Patient-reported via Rxwind. Not a clinical record._");
     return L.join("\n");
   }, [member, focus, summary, current, recent]);
@@ -230,7 +230,7 @@ export default function Brief({ episodeId }: { episodeId?: string }) {
           <LedgerList
             title={t("sideEffectsLabel")}
             color="#d93d4a"
-            items={ledger.side.map((m) => `${m.generic ?? m.name}${m.sideEffects?.length ? ` — ${m.sideEffects.join(", ")}` : ""}`)}
+            items={ledger.side.map((m) => `${m.generic ?? m.name}${m.sideEffects?.length ? ` (${m.sideEffects.join(", ")})` : ""}`)}
           />
         </section>
 
@@ -284,7 +284,7 @@ function LedgerList({ title, color, items }: { title: string; color: string; ite
         {title}
       </div>
       <ul className="space-y-1 text-sm text-ink-2">
-        {items.length ? items.map((i) => <li key={i}>{i}</li>) : <li className="text-ink-3">—</li>}
+        {items.length ? items.map((i) => <li key={i}>{i}</li>) : <li className="text-ink-3">Nothing yet</li>}
       </ul>
     </div>
   );

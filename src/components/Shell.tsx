@@ -167,9 +167,9 @@ export function Shell({ children, routeKey }: { children: React.ReactNode; route
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={routeKey}
-            initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             className="mx-auto w-full max-w-[1240px] px-4 pb-36 pt-3 md:px-8 lg:px-10 lg:pb-16 lg:pt-10"
           >

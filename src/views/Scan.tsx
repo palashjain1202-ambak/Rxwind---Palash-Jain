@@ -47,10 +47,13 @@ export default function Scan() {
   const member = state.members.find((m) => m.id === memberId) ?? state.members[0];
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    const id = setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }), 450);
+    return () => clearTimeout(id);
   }, [phase]);
 
   const startSingle = useCallback(async (prepared: Prepared, sample?: Sample) => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     setImg(prepared);
     setError(null);
     setUsedCache(false);
@@ -230,10 +233,10 @@ export default function Scan() {
                   </Btn>
                 </div>
                 <p className="mt-4 hidden text-sm text-ink-3 md:block">
-                  {lang === "hi" ? "या पर्चियाँ यहाँ खींचकर छोड़ें — एक साथ कई भी" : "or drop parchis here — several at once builds your rewind"}
+                  {lang === "hi" ? "या पर्चियाँ यहाँ खींचकर छोड़ें, एक साथ कई भी" : "or drop parchis here. A few at once builds your rewind."}
                 </p>
                 <p className="mt-4 text-xs text-ink-3 md:hidden">
-                  {lang === "hi" ? "कई पुरानी पर्चियाँ एक साथ चुनें" : "Pick several old parchis at once to build your rewind"}
+                  {lang === "hi" ? "कई पुरानी पर्चियाँ एक साथ चुनें" : "Pick a few old parchis at once to build your rewind"}
                 </p>
                 <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => e.target.files && onFiles(e.target.files)} />
                 <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => e.target.files && onFiles(e.target.files)} />
@@ -316,7 +319,7 @@ export default function Scan() {
                     {result.diagnosis && <p className="mt-3 text-sm text-ink-2">{result.diagnosis}</p>}
                     {usedCache && (
                       <p className="mt-3 rounded-xl bg-amber-soft px-3 py-2 text-xs text-amber">
-                        {lang === "hi" ? "AI अभी व्यस्त है — सैंपल का सेव किया हुआ नतीजा दिखाया गया।" : "AI is busy right now — showing this sample's saved reading."}
+                        {lang === "hi" ? "AI व्यस्त है। सैंपल का सेव नतीजा दिखाया गया।" : "AI is busy. Showing this sample's saved reading."}
                       </p>
                     )}
                   </div>
@@ -634,8 +637,13 @@ function ScanIllustration() {
 }
 
 function ScanningStage({ preview }: { preview: string }) {
-  const { t } = useMemory();
+  const { t, lang } = useMemory();
   const steps = t("scanningSteps").split("|");
+  const [hl, setHl] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setHl((x) => (x + 1) % SHORTHAND.length), 750);
+    return () => clearInterval(id);
+  }, []);
   const [k, setK] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setK((x) => Math.min(x + 1, steps.length - 1)), 1100);
@@ -649,11 +657,12 @@ function ScanningStage({ preview }: { preview: string }) {
     { l: "60%", t: "8%", w: "30%", h: "8%" },
   ];
   return (
-    <div className="mx-auto grid max-w-4xl items-center gap-8 py-4 md:grid-cols-2 md:py-10">
+    <div className="mx-auto max-w-4xl py-4 md:py-8">
+    <div className="grid items-center gap-8 md:grid-cols-2">
       <div className="relative mx-auto w-full max-w-[360px]">
         <div className="relative overflow-hidden rounded-[26px] bg-ink shadow-[var(--shadow-lift)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview} alt="" className="w-full opacity-90" />
+          <img src={preview} alt="" className="max-h-[44vh] w-full object-cover object-top opacity-90 md:max-h-none" />
           <div className="absolute inset-0 bg-[linear-gradient(rgba(17,41,29,.0),rgba(17,41,29,.25))]" />
           {boxes.map((b, i) => (
             <motion.div
@@ -709,5 +718,52 @@ function ScanningStage({ preview }: { preview: string }) {
         </div>
       </div>
     </div>
+    <div className="mt-8 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
+      <motion.div
+        className="h-full rounded-full bg-[linear-gradient(90deg,#37b24d,#129b8a)]"
+        initial={{ width: "4%" }}
+        animate={{ width: "94%" }}
+        transition={{ duration: 7, ease: [0.2, 0.7, 0.3, 1] }}
+      />
+    </div>
+    <div className="mt-8">
+      <div className="mb-3 text-sm font-semibold text-ink-2">
+        {lang === "hi" ? "डॉक्टर के शॉर्टकट, जिन्हें Rxwind समझता है" : "Doctor shorthand Rxwind understands"}
+      </div>
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        {SHORTHAND.map((c, i) => {
+          const on = i === hl;
+          return (
+            <motion.div
+              key={c.code}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0, scale: on ? 1.04 : 1 }}
+              transition={{ delay: 0.15 + i * 0.06, type: "spring", stiffness: 260, damping: 22 }}
+              className={cx(
+                "rounded-2xl border p-3 transition-colors",
+                on ? "border-leaf/50 bg-paper shadow-[var(--shadow-lift)]" : "border-ink/[0.06] bg-paper/60",
+              )}
+            >
+              <div className={cx("font-hand text-2xl leading-none", on ? "text-sky" : "text-ink-2")} style={{ fontFamily: "Caveat" }}>
+                {c.code}
+              </div>
+              <div className="mt-1.5 text-xs font-semibold text-ink-2">{c[lang]}</div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+    </div>
   );
 }
+
+const SHORTHAND = [
+  { code: "1-0-1", en: "Morning and night", hi: "सुबह और रात" },
+  { code: "BD", en: "Twice a day", hi: "दिन में दो बार" },
+  { code: "TDS", en: "Three times a day", hi: "दिन में तीन बार" },
+  { code: "HS", en: "At bedtime", hi: "सोते समय" },
+  { code: "AC", en: "Before food", hi: "खाने से पहले" },
+  { code: "PC", en: "After food", hi: "खाने के बाद" },
+  { code: "SOS", en: "Only when needed", hi: "ज़रूरत पड़ने पर" },
+  { code: "× 5d", en: "For 5 days", hi: "5 दिन तक" },
+];

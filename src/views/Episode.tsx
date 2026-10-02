@@ -9,6 +9,7 @@ import { SLOTS, type Verdict } from "@/lib/types";
 import { cx, parseISO } from "@/lib/util";
 import { CheckInCard, FeelingChart } from "@/components/CheckIn";
 import { DosePlan } from "@/components/DosePlan";
+import { CalendarButton } from "@/components/CalendarButton";
 import { Btn, Chip, FormIcon, Reveal } from "@/components/ui";
 
 const fmt = (s: string, lang: "en" | "hi") => {
@@ -167,6 +168,7 @@ export default function EpisodeView({ id }: { id: string }) {
           {e.status !== "resolved" && (
             <div className="card p-5">
               <div className="mb-3 text-[0.7rem] font-semibold text-ink-3">{t("todaysDoses")}</div>
+              <CalendarButton memberId={e.memberId} className="mb-3" />
               <DosePlan memberId={e.memberId} compact />
               {e.status === "active" && (
                 <>
