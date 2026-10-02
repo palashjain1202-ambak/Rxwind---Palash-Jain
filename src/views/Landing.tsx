@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, BellRing, Camera, Check, History, Lock, Moon, Pill, Rewind, ShieldAlert, ShieldCheck, Sparkles, Sunrise, Wind } from "lucide-react";
+import { ArrowRight, BellRing, Camera, Check, FileText, History, House, Lock, Moon, Pill, Rewind, ScanLine, ShieldAlert, ShieldCheck, Sparkles, Sunrise, Wind } from "lucide-react";
 import { useMemory } from "@/lib/store";
 import { buildDemo } from "@/lib/demo";
 import { catColor, upcomingRisks } from "@/lib/insights";
@@ -304,10 +304,11 @@ export default function Landing() {
 
 /* ---------- How it works ---------- */
 
-const STEP_MS = 5200;
+const STEP_MS = 5600;
 
 function HowItWorks() {
   const { lang } = useMemory();
+  const hi = lang === "hi";
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
   useEffect(() => {
@@ -315,99 +316,147 @@ function HowItWorks() {
     const id = setTimeout(() => setStep((s) => (s + 1) % 3), STEP_MS);
     return () => clearTimeout(id);
   }, [step, paused]);
+
   const steps = [
     {
       icon: <Camera className="size-5" />,
-      title: lang === "hi" ? "पर्ची की फ़ोटो लें" : "Snap the parchi",
-      body: lang === "hi" ? "लिखावट, 1-0-1, BD, AC. सब समझकर सुबह से रात तक का प्लान।" : "Handwriting, 1-0-1, BD, AC. Decoded into a simple morning-to-night plan.",
+      title: hi ? "पर्ची की फ़ोटो लें" : "Snap the parchi",
+      body: hi ? "लिखावट, 1-0-1, BD, AC. सब समझकर सुबह से रात तक का प्लान।" : "Handwriting, 1-0-1, BD, AC. Decoded into a simple morning-to-night plan.",
+      tags: hi ? ["हाथ की लिखावट", "हिंदी में भी", "5 सेकंड"] : ["Handwriting", "Hindi too", "5 seconds"],
     },
     {
       icon: <Check className="size-5" />,
-      title: lang === "hi" ? "बताएँ क्या काम आया" : "Tell it what worked",
-      body: lang === "hi" ? "रोज़ एक टैप। ऐसे पर्चियाँ याद बन जाती हैं।" : "One tap a day. That's how prescriptions become memory.",
+      title: hi ? "बताएँ क्या काम आया" : "Tell it what worked",
+      body: hi ? "रोज़ एक टैप। ऐसे पर्चियाँ याद बन जाती हैं।" : "One tap a day. That's how prescriptions become memory.",
+      tags: hi ? ["मूड", "साइड इफ़ेक्ट", "फ़ायदा हुआ?"] : ["Mood", "Side effects", "Did it help?"],
     },
     {
       icon: <BellRing className="size-5" />,
-      title: lang === "hi" ? "अगली बार पहले से तैयार" : "Be ready next season",
-      body: lang === "hi" ? "मई में आँखें, नवंबर में खाँसी। Rxwind पहले बताता है।" : "Eyes in May, cough in November. Rxwind sees it coming and briefs your doctor.",
+      title: hi ? "अगली बार पहले से तैयार" : "Be ready next season",
+      body: hi ? "मई में आँखें, नवंबर में खाँसी। Rxwind पहले बताता है और डॉक्टर के लिए सार बनाता है।" : "Eyes in May, cough in November. Rxwind sees it coming and briefs your doctor.",
+      tags: hi ? ["मौसम रडार", "डॉक्टर ब्रीफ़", "WhatsApp"] : ["Season radar", "Doctor brief", "WhatsApp"],
     },
   ];
+
   return (
-    <section className="relative z-10 mx-auto max-w-[1240px] px-4 py-6 md:px-8 md:py-10">
-      <Reveal>
-        <div className="text-sm font-semibold text-leaf-deep">{lang === "hi" ? "कैसे काम करता है" : "How it works"}</div>
-        <h2 className="font-display mt-3 max-w-2xl text-[2rem] font-semibold leading-[1.05] md:text-[3rem]">
-          {lang === "hi" ? "तीन टैप में सेहत की याद।" : "Three taps to a health memory."}
-        </h2>
-      </Reveal>
-      <div className="mt-10 grid items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-16">
-        <div className="flex flex-col gap-3" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-          {steps.map((s, i) => {
-            const on = i === step;
-            return (
-              <motion.button
-                key={i}
-                onClick={() => setStep(i)}
-                layout
-                className={cx(
-                  "relative overflow-hidden rounded-3xl border p-5 text-left transition-colors md:p-6",
-                  on ? "border-white bg-paper shadow-[var(--shadow-lift)]" : "border-transparent bg-paper/30 hover:bg-paper/60",
-                )}
-              >
-                <div className="flex items-start gap-4">
-                  <span
-                    className={cx(
-                      "grid size-11 shrink-0 place-items-center rounded-2xl transition-colors",
-                      on ? "bg-[linear-gradient(135deg,#3dbb55,#1f8a3b)] text-white" : "bg-coral-soft text-leaf-deep",
-                    )}
+    <section className="relative z-10 px-3 py-6 md:px-8 md:py-10">
+      <div className="relative mx-auto max-w-[1240px] overflow-hidden rounded-[36px] border border-white/70 bg-[linear-gradient(160deg,rgba(255,255,255,.75),rgba(226,243,231,.6))] px-5 py-10 shadow-[var(--shadow-soft)] md:rounded-[44px] md:px-12 md:py-14">
+        <div aria-hidden className="absolute -right-24 top-10 size-[420px] rounded-full bg-[radial-gradient(circle,rgba(55,178,77,.18),transparent_65%)] blur-2xl" />
+        <Reveal>
+          <div className="text-sm font-semibold text-leaf-deep">{hi ? "कैसे काम करता है" : "How it works"}</div>
+          <h2 className="font-display mt-3 max-w-2xl text-[2rem] font-semibold leading-[1.05] md:text-[3rem]">
+            {hi ? "तीन टैप में सेहत की याद।" : "Three taps to a health memory."}
+          </h2>
+        </Reveal>
+
+        <div className="relative mt-10 grid items-center gap-12 lg:grid-cols-[1fr_auto] lg:gap-16">
+          {/* steps with a progress rail */}
+          <div className="relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+            <div aria-hidden className="absolute bottom-[110px] left-[23px] top-7 w-[2px] rounded-full bg-ink/[0.08] md:left-[27px]" />
+            <motion.div
+              aria-hidden
+              className="absolute bottom-[110px] left-[23px] top-7 w-[2px] origin-top rounded-full md:left-[27px] bg-[linear-gradient(180deg,#37b24d,#129b8a)]"
+              animate={{ scaleY: step / 2 }}
+              transition={{ type: "spring", stiffness: 110, damping: 22 }}
+            />
+            <div className="flex flex-col gap-4">
+              {steps.map((s, i) => {
+                const on = i === step;
+                const done = i < step;
+                return (
+                  <motion.button
+                    key={i}
+                    onClick={() => setStep(i)}
+                    animate={{ opacity: on ? 1 : 0.62 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="group relative flex w-full items-start gap-3 text-left md:gap-5"
                   >
-                    {s.icon}
-                  </span>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-ink-3">0{i + 1}</span>
-                      <h3 className="font-display text-xl font-semibold">{s.title}</h3>
-                    </div>
-                    <AnimatePresence initial={false}>
-                      {on && (
-                        <motion.p
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden pt-1.5 text-ink-2"
-                        >
-                          {s.body}
-                        </motion.p>
+                    <motion.span
+                      className={cx(
+                        "relative z-10 grid size-12 shrink-0 place-items-center rounded-2xl border transition-colors duration-500 md:size-14",
+                        on
+                          ? "border-transparent bg-[linear-gradient(135deg,#3dbb55,#1f8a3b)] text-white shadow-[var(--shadow-glow)]"
+                          : done
+                            ? "border-leaf/30 bg-coral-soft text-leaf-deep"
+                            : "border-ink/[0.08] bg-paper text-ink-3",
                       )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-                {on && (
-                  <motion.span
-                    key={`bar-${step}-${paused}`}
-                    className="absolute bottom-0 left-0 h-[3px] bg-[linear-gradient(90deg,#37b24d,#129b8a)]"
-                    initial={{ width: "0%" }}
-                    animate={{ width: paused ? "0%" : "100%" }}
-                    transition={{ duration: paused ? 0 : STEP_MS / 1000, ease: "linear" }}
-                  />
-                )}
-              </motion.button>
-            );
-          })}
+                      animate={{ scale: on ? 1.06 : 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      {s.icon}
+                      {on && (
+                        <motion.span
+                          className="absolute inset-0 rounded-2xl border-2 border-leaf"
+                          animate={{ scale: [1, 1.35], opacity: [0.6, 0] }}
+                          transition={{ duration: 1.6, repeat: Infinity }}
+                        />
+                      )}
+                    </motion.span>
+                    <div
+                      className={cx(
+                        "relative min-w-0 flex-1 overflow-hidden rounded-3xl border p-4 transition-all duration-500 md:p-5",
+                        on ? "border-white bg-paper shadow-[var(--shadow-lift)]" : "border-transparent bg-transparent",
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-ink-3">0{i + 1}</span>
+                        <h3 className="font-display text-xl font-semibold">{s.title}</h3>
+                      </div>
+                      <p className="mt-1.5 text-ink-2">{s.body}</p>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {s.tags.map((tg, k) => (
+                          <motion.span
+                            key={tg}
+                            animate={on ? { y: [6, 0], opacity: [0, 1] } : { y: 0, opacity: 1 }}
+                            transition={{ delay: on ? 0.08 * k : 0, duration: 0.35 }}
+                            className={cx(
+                              "rounded-full px-2.5 py-1 text-xs font-semibold transition-colors duration-500",
+                              on ? "bg-coral-soft text-leaf-deep" : "bg-ink/[0.05] text-ink-3",
+                            )}
+                          >
+                            {tg}
+                          </motion.span>
+                        ))}
+                      </div>
+                      {on && (
+                        <motion.span
+                          key={`bar-${step}-${paused}`}
+                          className="absolute bottom-0 left-0 h-[3px] bg-[linear-gradient(90deg,#37b24d,#129b8a)]"
+                          initial={{ width: "0%" }}
+                          animate={{ width: paused ? "0%" : "100%" }}
+                          transition={{ duration: paused ? 0 : STEP_MS / 1000, ease: "linear" }}
+                        />
+                      )}
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          <Phone step={step}>
+            <AnimatePresence initial={false}>
+              {step === 0 && <ScreenScan key="s0" />}
+              {step === 1 && <ScreenCheckin key="s1" />}
+              {step === 2 && <ScreenAlert key="s2" />}
+            </AnimatePresence>
+          </Phone>
         </div>
-        <Phone>
-          <AnimatePresence mode="wait">
-            {step === 0 && <ScreenScan key="s0" />}
-            {step === 1 && <ScreenCheckin key="s1" />}
-            {step === 2 && <ScreenAlert key="s2" />}
-          </AnimatePresence>
-        </Phone>
       </div>
     </section>
   );
 }
 
-function Phone({ children }: { children: React.ReactNode }) {
+function Phone({ children, step }: { children: React.ReactNode; step: number }) {
+  const { lang } = useMemory();
+  const hi = lang === "hi";
+  const tabs = [
+    { icon: <House className="size-4" />, l: hi ? "आज" : "Today" },
+    { icon: <History className="size-4" />, l: hi ? "रिवाइंड" : "Rewind" },
+    { icon: <FileText className="size-4" />, l: hi ? "ब्रीफ़" : "Brief" },
+  ];
+  const activeTab = step === 0 ? -1 : step === 1 ? 0 : 2;
   return (
     <motion.div
       initial={{ opacity: 0, y: 40, rotate: 3 }}
@@ -416,91 +465,137 @@ function Phone({ children }: { children: React.ReactNode }) {
       transition={{ type: "spring", stiffness: 90, damping: 16 }}
       className="relative mx-auto"
     >
-      <div
-        aria-hidden
-        className="absolute -inset-10 -z-10 rounded-full blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(55,178,77,.3), transparent 65%)" }}
-      />
-      <div className="relative h-[560px] w-[280px] rounded-[48px] bg-ink p-[10px] shadow-[0_40px_80px_-30px_rgba(17,41,29,.55)]">
-        <div className="relative h-full w-full overflow-hidden rounded-[38px] bg-[linear-gradient(180deg,#eef8f0,#e3f2e7)]">
-          <div className="absolute left-1/2 top-2 z-20 h-6 w-24 -translate-x-1/2 rounded-full bg-ink" />
-          <div className="flex items-center justify-between px-6 pt-3 text-[0.62rem] font-semibold text-ink">
+      <div aria-hidden className="absolute -inset-12 -z-10 rounded-full bg-[radial-gradient(circle,rgba(55,178,77,.32),transparent_65%)] blur-2xl" />
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="relative h-[580px] w-[288px] rounded-[50px] bg-[linear-gradient(145deg,#1d3a2b,#0c1f15)] p-[10px] shadow-[0_50px_90px_-30px_rgba(17,41,29,.6),inset_0_0_0_1.5px_rgba(255,255,255,.08)]"
+      >
+        <div className="relative h-full w-full overflow-hidden rounded-[40px] bg-[linear-gradient(180deg,#f1faf2,#e2f2e6)]">
+          <div className="absolute left-1/2 top-2.5 z-30 h-[26px] w-[92px] -translate-x-1/2 rounded-full bg-[#0c1f15]" />
+          <div className="relative z-20 flex items-center justify-between px-7 pt-3.5 text-[0.62rem] font-semibold text-ink">
             <span>9:41</span>
-            <span>5G</span>
+            <span className="flex items-center gap-1">
+              5G
+              <span className="inline-block h-2.5 w-5 rounded-[3px] border border-ink/60 p-[1px]">
+                <span className="block h-full w-3/4 rounded-[1px] bg-ink" />
+              </span>
+            </span>
           </div>
-          <div className="px-4 pt-6">{children}</div>
+          {/* screen content: screens overlap while crossfading, so there's never a blank frame */}
+          <div className="absolute inset-x-0 bottom-[64px] top-11 px-4">{children}</div>
+          {/* in-app tab bar */}
+          <div className="absolute inset-x-3 bottom-3 z-20 flex h-[52px] items-center justify-around rounded-[22px] bg-white/85 shadow-[0_4px_16px_-6px_rgba(17,41,29,.25)] backdrop-blur">
+            {tabs.slice(0, 2).map((tb, i) => (
+              <span key={i} className={cx("flex flex-col items-center gap-0.5 text-[0.55rem] font-semibold transition-colors duration-500", activeTab === i ? "text-leaf-deep" : "text-ink-3")}>
+                {tb.icon}
+                {tb.l}
+              </span>
+            ))}
+            <motion.span
+              className="grid size-10 -translate-y-3 place-items-center rounded-full bg-[linear-gradient(135deg,#3dbb55,#1f8a3b)] text-white shadow-[var(--shadow-glow)]"
+              animate={step === 0 ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+              transition={{ duration: 1.2, repeat: step === 0 ? Infinity : 0 }}
+            >
+              <ScanLine className="size-5" />
+            </motion.span>
+            <span className={cx("flex flex-col items-center gap-0.5 text-[0.55rem] font-semibold transition-colors duration-500", activeTab === 2 ? "text-leaf-deep" : "text-ink-3")}>
+              {tabs[2].icon}
+              {tabs[2].l}
+            </span>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
 
 const screenAnim = {
-  initial: { opacity: 0, y: 20, scale: 0.98 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -16, scale: 0.98 },
-  transition: { duration: 0.35 },
-};
+  initial: { opacity: 0, x: 40, scale: 0.98 },
+  animate: { opacity: 1, x: 0, scale: 1 },
+  exit: { opacity: 0, x: -40, scale: 0.98 },
+  transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+} as const;
+
+const item = (i: number, base = 0.15) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay: base + i * 0.12, duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+}) as const;
 
 function ScreenScan() {
   const { lang } = useMemory();
+  const hi = lang === "hi";
   const meds = [
-    { n: "Dolo 650", s: lang === "hi" ? "सुबह · दोपहर · रात" : "Morning · Afternoon · Night" },
-    { n: "Allegra 120", s: lang === "hi" ? "रात" : "Night" },
-    { n: "Pan 40", s: lang === "hi" ? "सुबह, खाने से पहले" : "Morning, before food" },
+    { n: "Dolo 650", s: hi ? "सुबह · दोपहर · रात" : "Morning · Afternoon · Night", c: "#e8613c" },
+    { n: "Allegra 120", s: hi ? "रात" : "Night", c: "#6d4cf0" },
+    { n: "Pan 40", s: hi ? "सुबह, खाने से पहले" : "Morning, before food", c: "#2f6fe4" },
   ];
   return (
-    <motion.div {...screenAnim}>
-      <div className="font-display text-lg font-semibold">{lang === "hi" ? "पर्ची पढ़ी जा रही है" : "Reading your parchi"}</div>
-      <div className="relative mt-3 h-[170px] overflow-hidden rounded-2xl bg-ink shadow-md">
+    <motion.div {...screenAnim} className="absolute inset-0 px-4">
+      <motion.div {...item(0, 0.05)} className="flex items-center justify-between">
+        <div className="font-display text-[1.05rem] font-semibold">{hi ? "पर्ची पढ़ी जा रही है" : "Reading your parchi"}</div>
+        <span className="rounded-full bg-coral-soft px-2 py-0.5 text-[0.58rem] font-bold text-leaf-deep">AI</span>
+      </motion.div>
+      <motion.div {...item(1, 0.05)} className="relative mt-3 h-[150px] overflow-hidden rounded-2xl bg-ink shadow-md">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/samples/gp-fever-thumb.jpg" alt="" className="size-full object-cover object-top opacity-90" />
         <motion.div
           className="absolute inset-x-0 h-14"
           style={{ background: "linear-gradient(to bottom, transparent, rgba(55,178,77,.35) 85%, rgba(55,178,77,.95))" }}
           animate={{ top: ["-30%", "100%"] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
         />
-      </div>
+        {["left-3 top-3 border-l-2 border-t-2", "right-3 top-3 border-r-2 border-t-2", "bottom-3 left-3 border-b-2 border-l-2", "bottom-3 right-3 border-b-2 border-r-2"].map((c) => (
+          <span key={c} className={cx("absolute size-5 rounded-[4px] border-white/90", c)} />
+        ))}
+      </motion.div>
       <div className="mt-3 flex flex-col gap-2">
         {meds.map((m, i) => (
-          <motion.div
-            key={m.n}
-            initial={{ opacity: 0, x: -24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8 + i * 0.5, type: "spring", stiffness: 260, damping: 22 }}
-            className="flex items-center gap-2.5 rounded-xl bg-white p-2.5 shadow-sm"
-          >
-            <span className="grid size-7 place-items-center rounded-lg bg-coral-soft text-leaf-deep">
-              <Check className="size-3.5" strokeWidth={3} />
-            </span>
-            <span>
+          <motion.div key={m.n} {...item(i, 0.45)} className="flex items-center gap-2.5 rounded-xl bg-white p-2.5 shadow-sm">
+            <span className="h-8 w-1 rounded-full" style={{ background: m.c }} />
+            <span className="min-w-0 flex-1">
               <span className="block text-[0.8rem] font-semibold">{m.n}</span>
-              <span className="block text-[0.68rem] text-ink-3">{m.s}</span>
+              <span className="block truncate text-[0.66rem] text-ink-3">{m.s}</span>
+            </span>
+            <span className="grid size-5 place-items-center rounded-full bg-mint text-white">
+              <Check className="size-3" strokeWidth={3} />
             </span>
           </motion.div>
         ))}
       </div>
+      <motion.div {...item(0, 1.0)} className="mt-3 flex items-center gap-2 rounded-xl bg-ink px-3 py-2.5 text-[0.7rem] font-semibold text-white">
+        <Sparkles className="size-3.5 text-[#8fe0a0]" />
+        {hi ? "आज के प्लान में जुड़ गया" : "Added to today's plan"}
+      </motion.div>
     </motion.div>
   );
 }
 
 function ScreenCheckin() {
   const { lang } = useMemory();
+  const hi = lang === "hi";
   const colors = ["#d93d4a", "#e8613c", "#d98a04", "#37b24d", "#129b8a"];
+  const pts = [2, 2, 3, 3, 4, 4];
+  const W = 228;
+  const H = 54;
+  const path = pts.map((v, i) => `${i === 0 ? "M" : "L"} ${(i / (pts.length - 1)) * W} ${H - ((v - 1) / 4) * (H - 8) - 4}`).join(" ");
   return (
-    <motion.div {...screenAnim}>
-      <div className="text-xs font-semibold text-ink-3">{lang === "hi" ? "दिन 4" : "Day 4"}</div>
-      <div className="font-display text-lg font-semibold leading-tight">{lang === "hi" ? "आज कैसा लग रहा है?" : "How are you feeling today?"}</div>
-      <div className="mt-4 grid grid-cols-5 gap-1.5">
+    <motion.div {...screenAnim} className="absolute inset-0 px-4">
+      <motion.div {...item(0, 0.05)}>
+        <div className="text-[0.65rem] font-semibold text-ink-3">{hi ? "गले का इन्फ़ेक्शन · दिन 4" : "Throat infection · Day 4"}</div>
+        <div className="font-display text-[1.05rem] font-semibold leading-tight">{hi ? "आज कैसा लग रहा है?" : "How are you feeling today?"}</div>
+      </motion.div>
+      <motion.div {...item(1, 0.05)} className="mt-3 grid grid-cols-5 gap-1.5">
         {colors.map((c, i) => (
           <motion.div
             key={c}
-            className="grid aspect-square place-items-center rounded-xl bg-white shadow-sm"
-            animate={i === 3 ? { scale: [1, 1, 1.18, 1], backgroundColor: ["#fff", "#fff", c, c] } : {}}
-            transition={{ duration: 1.2, delay: 0.6, times: [0, 0.5, 0.75, 1] }}
+            className="grid aspect-square place-items-center rounded-xl shadow-sm"
+            initial={{ backgroundColor: "#ffffff" }}
+            animate={i === 3 ? { backgroundColor: c, scale: [1, 1.15, 1] } : { backgroundColor: "#ffffff" }}
+            transition={{ delay: 0.5, duration: 0.5 }}
           >
-            <svg width="26" height="26" viewBox="0 0 36 36">
+            <svg width="24" height="24" viewBox="0 0 36 36">
               <circle cx="18" cy="18" r="15" fill="none" stroke={i === 3 ? "#fff" : c} strokeWidth="2.4" />
               <circle cx="12.5" cy="14" r="2" fill={i === 3 ? "#fff" : c} />
               <circle cx="23.5" cy="14" r="2" fill={i === 3 ? "#fff" : c} />
@@ -508,97 +603,98 @@ function ScreenCheckin() {
             </svg>
           </motion.div>
         ))}
-      </div>
-      <div className="mt-5 text-xs font-semibold text-ink-3">{lang === "hi" ? "क्या फ़ायदा हुआ?" : "Did it help?"}</div>
+      </motion.div>
+      <motion.div {...item(2, 0.05)} className="mt-3 rounded-xl bg-white p-2.5 shadow-sm">
+        <div className="flex items-center justify-between text-[0.62rem] font-semibold text-ink-3">
+          <span>{hi ? "पिछले 6 दिन" : "Last 6 days"}</span>
+          <span className="text-mint">{hi ? "बेहतर हो रहा है" : "Getting better"}</span>
+        </div>
+        <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 h-[54px] w-full overflow-visible">
+          <motion.path d={path} fill="none" stroke="#37b24d" strokeWidth="2.5" strokeLinecap="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.4, duration: 0.9 }} />
+        </svg>
+      </motion.div>
+      <motion.div {...item(3, 0.05)} className="mt-3 text-[0.65rem] font-semibold text-ink-3">{hi ? "क्या फ़ायदा हुआ?" : "Did it help?"}</motion.div>
       {[
-        { n: "Montair LC", v: lang === "hi" ? "फ़ायदा हुआ" : "Helped", c: "bg-mint text-white" },
-        { n: "Azee 500", v: lang === "hi" ? "एसिडिटी" : "Acidity", c: "bg-rose text-white" },
+        { n: "Montair LC", v: hi ? "फ़ायदा हुआ" : "Helped", c: "bg-mint text-white" },
+        { n: "Azee 500", v: hi ? "एसिडिटी" : "Acidity", c: "bg-rose text-white" },
       ].map((m, i) => (
-        <motion.div
-          key={m.n}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5 + i * 0.5 }}
-          className="mt-2 flex items-center justify-between rounded-xl bg-white p-2.5 shadow-sm"
-        >
-          <span className="text-[0.8rem] font-semibold">{m.n}</span>
+        <motion.div key={m.n} {...item(i, 0.6)} className="mt-1.5 flex items-center justify-between rounded-xl bg-white p-2.5 shadow-sm">
+          <span className="text-[0.78rem] font-semibold">{m.n}</span>
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 1.9 + i * 0.5, type: "spring", stiffness: 400, damping: 14 }}
-            className={cx("rounded-full px-2 py-0.5 text-[0.65rem] font-bold", m.c)}
+            transition={{ delay: 0.85 + i * 0.12, type: "spring", stiffness: 420, damping: 16 }}
+            className={cx("rounded-full px-2 py-0.5 text-[0.62rem] font-bold", m.c)}
           >
             {m.v}
           </motion.span>
         </motion.div>
       ))}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 3 }}
-        className="mt-4 rounded-xl bg-ink p-3 text-[0.72rem] text-white"
-      >
-        {lang === "hi" ? "सेव हो गया। अगली बार काम आएगा।" : "Saved to your memory. Next time, you'll know."}
-      </motion.div>
     </motion.div>
   );
 }
 
 function ScreenAlert() {
   const { lang } = useMemory();
+  const hi = lang === "hi";
   return (
-    <motion.div {...screenAnim} className="relative">
+    <motion.div {...screenAnim} className="absolute inset-0 px-4">
       <motion.div
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3, type: "spring", stiffness: 220, damping: 18 }}
-        className="rounded-2xl bg-white/95 p-3 shadow-[var(--shadow-lift)]"
+        initial={{ y: -40, opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 20 }}
+        className="rounded-2xl bg-white p-3 shadow-[var(--shadow-lift)]"
       >
-        <div className="flex items-center gap-2 text-[0.65rem] font-semibold text-ink-3">
-          <Logo size={16} word={false} /> Rxwind · {lang === "hi" ? "अभी" : "now"}
+        <div className="flex items-center gap-2 text-[0.62rem] font-semibold text-ink-3">
+          <Logo size={16} word={false} /> Rxwind · {hi ? "अभी" : "now"}
         </div>
-        <div className="mt-1.5 text-[0.82rem] font-semibold leading-snug">
-          {lang === "hi" ? "स्मॉग का मौसम 36 दिन में" : "Smog season in 36 days"}
-        </div>
-        <div className="text-[0.72rem] leading-snug text-ink-2">
-          {lang === "hi" ? "पिछली बार Montair से आराम, Azithromycin से एसिडिटी।" : "Last time Montair helped. Azithromycin gave you acidity."}
+        <div className="mt-1.5 text-[0.82rem] font-semibold leading-snug">{hi ? "स्मॉग का मौसम 36 दिन में" : "Smog season in 36 days"}</div>
+        <div className="text-[0.7rem] leading-snug text-ink-2">
+          {hi ? "पिछली बार Montair से आराम, Azithromycin से एसिडिटी।" : "Last time Montair helped. Azithromycin gave you acidity."}
         </div>
       </motion.div>
-      <div className="mt-5 grid grid-cols-4 gap-1.5">
-        {monthsShort[lang].map((m, i) => {
-          const hot = i === 10;
-          const past = i === 4 || i === 7;
-          return (
-            <motion.div
-              key={m}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 + i * 0.04 }}
-              className={cx(
-                "relative rounded-lg py-2 text-center text-[0.68rem] font-semibold",
-                hot ? "bg-violet text-white" : past ? "bg-sky-soft text-sky" : "bg-white text-ink-3",
-              )}
-            >
-              {m}
-              {hot && (
-                <motion.span
-                  className="absolute inset-0 rounded-lg border-2 border-violet"
-                  animate={{ scale: [1, 1.25], opacity: [0.8, 0] }}
-                  transition={{ duration: 1.4, repeat: Infinity }}
-                />
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.4 }}
-        className="mt-5 rounded-2xl bg-[linear-gradient(135deg,#3dbb55,#1f8a3b)] p-3 text-white"
-      >
-        <div className="text-[0.72rem] text-white/80">{lang === "hi" ? "डॉक्टर ब्रीफ़ तैयार" : "Doctor brief ready"}</div>
-        <div className="text-[0.82rem] font-semibold">{lang === "hi" ? "WhatsApp पर भेजें" : "Share on WhatsApp"}</div>
+      <motion.div {...item(1, 0.2)} className="mt-3 rounded-2xl bg-white p-3 shadow-sm">
+        <div className="mb-2 text-[0.62rem] font-semibold text-ink-3">{hi ? "आपके मौसम" : "Your seasons"}</div>
+        <div className="grid grid-cols-6 gap-1">
+          {monthsShort[lang].map((m, i) => {
+            const hot = i === 10;
+            const past = i === 4 || i === 7;
+            return (
+              <div
+                key={m}
+                className={cx(
+                  "relative rounded-md py-1.5 text-center text-[0.58rem] font-semibold",
+                  hot ? "bg-violet text-white" : past ? "bg-sky-soft text-sky" : "bg-canvas text-ink-3",
+                )}
+              >
+                {m}
+                {hot && (
+                  <motion.span
+                    className="absolute inset-0 rounded-md border-2 border-violet"
+                    animate={{ scale: [1, 1.3], opacity: [0.8, 0] }}
+                    transition={{ duration: 1.4, repeat: Infinity }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
+      <motion.div {...item(2, 0.2)} className="mt-3 rounded-2xl bg-white p-3 shadow-sm">
+        <div className="text-[0.62rem] font-semibold text-ink-3">{hi ? "डॉक्टर ब्रीफ़" : "Doctor brief"}</div>
+        {[88, 70, 80].map((w, i) => (
+          <motion.div
+            key={i}
+            className="mt-1.5 h-1.5 rounded-full bg-ink/10"
+            initial={{ width: 0 }}
+            animate={{ width: `${w}%` }}
+            transition={{ delay: 0.45 + i * 0.1, duration: 0.5 }}
+          />
+        ))}
+      </motion.div>
+      <motion.div {...item(3, 0.2)} className="mt-3 flex items-center justify-between rounded-2xl bg-[#1faa59] px-3 py-2.5 text-white">
+        <span className="text-[0.78rem] font-semibold">{hi ? "WhatsApp पर भेजें" : "Share on WhatsApp"}</span>
+        <ArrowRight className="size-4" />
       </motion.div>
     </motion.div>
   );
