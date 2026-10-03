@@ -180,7 +180,7 @@ export default function EpisodeView({ id }: { id: string }) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 lg:col-span-5">
+        <div className={cx("flex flex-col gap-6 lg:col-span-5", e.status !== "resolved" && "order-first lg:order-none")}>
           {e.status !== "resolved" && (
             <div className="card p-5">
               <div className="mb-3 text-[0.7rem] font-semibold text-ink-3">{t("todaysDoses")}</div>

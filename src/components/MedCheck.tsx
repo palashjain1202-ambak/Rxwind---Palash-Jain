@@ -14,6 +14,7 @@ import type { Episode, Lang, MedAnalysis, MedReport, Medicine, MemoryState, Symp
 import { SLOTS } from "@/lib/types";
 import { cx, daysBetween, todayISO } from "@/lib/util";
 import { FormIcon } from "./ui";
+import { CalendarButton } from "./CalendarButton";
 
 type Kind = MedReport["kind"];
 
@@ -416,7 +417,7 @@ function Flow({
         {phase === "loading" && target && <Loading key="loading" med={target.med} kind={kind} />}
 
         {phase === "result" && target && analysis && (
-          <Result key="result" med={target.med} analysis={analysis} kind={kind} onDone={onClose} onEdit={() => setPhase("form")} />
+          <Result key="result" med={target.med} analysis={analysis} kind={kind} onDone={onClose} onEdit={() => setPhase("form")} reminderFor={kind === "not-working" && missed !== "none" && target.ep.status !== "resolved" ? target.ep.memberId : undefined} />
         )}
       </AnimatePresence>
     </div>
@@ -537,7 +538,7 @@ function Loading({ med, kind }: { med: Medicine; kind: Kind }) {
   );
 }
 
-function Result({ med, analysis, kind, onDone, onEdit }: { med: Medicine; analysis: MedAnalysis; kind: Kind; onDone: () => void; onEdit: () => void }) {
+function Result({ med, analysis, kind, onDone, onEdit, reminderFor }: { med: Medicine; analysis: MedAnalysis; kind: Kind; onDone: () => void; onEdit: () => void; reminderFor?: string }) {
   const { lang } = useMemory();
   const hi = lang === "hi";
   const [copied, setCopied] = useState(false);
@@ -588,6 +589,17 @@ function Result({ med, analysis, kind, onDone, onEdit }: { med: Medicine; analys
         })}
       </div>
 
+      {reminderFor && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-4 flex flex-col gap-2 rounded-2xl border border-leaf/25 bg-mint-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="text-sm font-semibold">{hi ? "डोज़ छूटना बंद करें।" : "Stop missing doses."}</p>
+          <CalendarButton memberId={reminderFor} />
+        </motion.div>
+      )}
       {analysis.selfCare.length > 0 && (
         <Block title={hi ? "आप क्या कर सकते हैं" : "What you can do"} icon={<Check className="size-4 text-mint" />} items={analysis.selfCare} delay={0.35} />
       )}

@@ -12,7 +12,7 @@ import type { Food, Medicine, ScanResult, Slot } from "@/lib/types";
 import { SLOTS } from "@/lib/types";
 import { allergyHits, catColor, duplicateHits, todaysMeds } from "@/lib/insights";
 import { categoryLabel, foodLabel, formLabel, slotLabel } from "@/lib/i18n";
-import { cx, daysBetween, uid } from "@/lib/util";
+import { cx, daysBetween, todayISO, uid } from "@/lib/util";
 import { Btn, Chip, ConfidenceDot, FormIcon } from "@/components/ui";
 
 type Phase = "pick" | "scanning" | "review" | "bulk";
@@ -74,6 +74,8 @@ export default function Scan() {
       }
     }
     await minWait;
+    // Samples act as "the parchi I just got", so reminders and today's plan work on any day.
+    if (sample && res.isPrescription) res = { ...res, date: todayISO() };
     if (!res.isPrescription) {
       setError(t("notRx"));
       setPhase("pick");
