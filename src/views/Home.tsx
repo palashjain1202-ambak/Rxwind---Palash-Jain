@@ -6,6 +6,7 @@ import { useMemory } from "@/lib/store";
 import { DosePlan, ProgressRing, useTodayProgress } from "@/components/DosePlan";
 import { CalendarButton } from "@/components/CalendarButton";
 import { CheckInCard } from "@/components/CheckIn";
+import { MedFeedback } from "@/components/MedCheck";
 import { SeasonWheel, aqiBand, useAqi } from "@/components/SeasonWheel";
 import { EpisodeCard } from "@/components/EpisodeCard";
 import { MemberSwitch } from "@/components/Shell";
@@ -102,6 +103,9 @@ export default function Home() {
                   <CalendarButton memberId={member.id} />
                 </div>
                 <DosePlan memberId={member.id} />
+              </div>
+              <div className="mt-6 border-t border-ink/[0.06] pt-5">
+                <MedFeedback episode={active} />
               </div>
               {active.status === "active" && (
                 <div className="mt-6 border-t border-ink/[0.06] pt-5">

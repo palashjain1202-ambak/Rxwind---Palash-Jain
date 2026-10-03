@@ -45,6 +45,41 @@ export interface Medicine {
   confidence: number; // 0..1
   verdict?: Verdict;
   sideEffects?: string[];
+  report?: MedReport;
+}
+
+export type SymptomKey =
+  | "acidity" | "nausea" | "drowsy" | "dizzy" | "headache" | "burning" | "loose" | "constipation"
+  | "rash" | "dry-mouth" | "palpitations" | "muscle" | "mood" | "swelling" | "breathing";
+
+export interface MedFinding {
+  label: string;
+  match: "common" | "uncommon" | "serious" | "not-typical" | "likely" | "possible" | "unlikely";
+  detail: string;
+}
+
+export interface MedAnalysis {
+  summary: string;
+  findings: MedFinding[];
+  selfCare: string[];
+  askDoctor: string[];
+  redFlags: string[];
+  urgent: boolean;
+  source: "ai" | "library";
+  lang: Lang;
+}
+
+export interface MedReport {
+  kind: "side-effect" | "not-working";
+  date: string;
+  symptoms: SymptomKey[];
+  other?: string;
+  severity?: "mild" | "moderate" | "severe";
+  onset?: "first-dose" | "few-days" | "later";
+  missed?: "none" | "few" | "many";
+  asInstructed?: "yes" | "unsure" | "no";
+  trend?: "same" | "worse" | "new";
+  analysis?: MedAnalysis;
 }
 
 export interface Prescription {

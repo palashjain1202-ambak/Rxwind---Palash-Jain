@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { CheckIn, Episode, Lang, Medicine, MemoryState, Prescription, ScanResult, Slot, Verdict } from "./types";
-import { buildDemo, emptyState } from "./demo";
+import type { CheckIn, Episode, Lang, Medicine, MedReport, MemoryState, Prescription, ScanResult, Slot, Verdict } from "./types";
+import { symptomLabel } from "./medkb";
+import { seedReports, buildDemo, emptyState } from "./demo";
 import { tr, type TKey } from "./i18n";
 import { daysBetween, todayISO, uid } from "./util";
 
@@ -57,6 +58,7 @@ interface Ctx {
   toggleDose: (epId: string, medId: string, slot: Slot, date?: string) => void;
   addCheckIn: (epId: string, c: CheckIn) => void;
   setVerdict: (epId: string, medId: string, v: Verdict) => void;
+  saveReport: (epId: string, medId: string, r: MedReport) => void;
   savePrescription: (scan: ScanResult, opts: { memberId: string; episodeId: string | "new"; thumb?: string; meds: Medicine[] }) => string;
   startDemo: () => void;
   startMine: () => void;
@@ -151,6 +153,26 @@ export function MemoryProvider({ children }: { children: React.ReactNode }) {
             medicines: p.medicines.map((m) => (m.id === medId ? { ...m, verdict: v } : m)),
           })),
         })),
+      saveReport: (epId, medId, r) =>
+        mutateEp(epId, (e) => ({
+          ...e,
+          prescriptions: e.prescriptions.map((p) => ({
+            ...p,
+            medicines: p.medicines.map((m) =>
+              m.id === medId
+                ? {
+                    ...m,
+                    verdict: r.kind === "side-effect" ? "side-effect" : "no-change",
+                    sideEffects:
+                      r.kind === "side-effect"
+                        ? [...r.symptoms.map((k) => symptomLabel.en[k]), ...(r.other ? [r.other] : [])]
+                        : m.sideEffects,
+                    report: r,
+                  }
+                : m,
+            ),
+          })),
+        })),
       savePrescription: (scan, { memberId, episodeId, thumb, meds }) => {
         const rx: Prescription = {
           id: uid(),
@@ -230,7 +252,7 @@ function refreshDemo(saved: MemoryState): MemoryState {
   const active = saved.episodes.find((e) => e.id === "ep-throat-active");
   if (!active) return buildDemo();
   const age = daysBetween(active.startDate, todayISO());
-  if (age >= 0 && age <= 4) return saved;
+  if (age >= 0 && age <= 4) return seedReports(saved);
   return buildDemo();
 }
 

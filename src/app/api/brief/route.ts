@@ -17,11 +17,11 @@ const schema = {
 
 const PROMPT = `You write a patient-held handover note for an Indian doctor who has ~2 minutes.
 Using ONLY the JSON history below, write:
-1) summaryEn: 3-4 crisp clinical sentences: recurring patterns with months, what the patient REPORTED helped vs didn't, side effects, allergies, current medicines. Use generic names with brand in brackets once. No advice, no new diagnoses, no recommendations.
+1) summaryEn: 3-4 crisp clinical sentences: recurring patterns with months, what the patient REPORTED helped vs didn't, side effects (with severity and onset when a medicine "check" exists), missed doses, allergies, current medicines. Use generic names with brand in brackets once. No advice, no new diagnoses, no recommendations.
 2) summaryHi: the same in simple Hindi (Devanagari).
-3) questionsEn: 3 short questions the patient could ask this doctor (e.g. about prevention before the season, avoiding a drug that caused side effects). Never suggest a specific drug or dose.
+3) questionsEn: 3 short questions the patient could ask this doctor (e.g. about prevention before the season, avoiding a drug that caused side effects, what to do if a medicine isn't working). Never suggest a specific drug or dose.
 4) questionsHi: same in simple Hindi.
-Phrase reported outcomes as "patient reports…". Be factual.`;
+Phrase reported outcomes as "patient reports…". Be factual. Never use em dashes.`;
 
 export async function POST(req: Request) {
   if (!hasKey()) return NextResponse.json({ error: "no_key" }, { status: 503 });

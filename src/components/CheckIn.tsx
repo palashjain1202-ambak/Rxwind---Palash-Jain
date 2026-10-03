@@ -2,12 +2,14 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { useMemory } from "@/lib/store";
 import { sideEffectOptions } from "@/lib/i18n";
 import type { CheckIn as CI, Episode } from "@/lib/types";
 import { feelingSeries } from "@/lib/insights";
 import { cx, todayISO } from "@/lib/util";
+import { MedCheckSheet } from "./MedCheck";
+import { legacyToKey } from "@/lib/medkb";
 
 const FACES: { v: CI["feeling"]; emoji: string; key: "feeling1" | "feeling2" | "feeling3" | "feeling4" | "feeling5"; color: string }[] = [
   { v: 1, emoji: "😣", key: "feeling1", color: "#d93d4a" },
@@ -24,6 +26,10 @@ export function CheckInCard({ episode }: { episode: Episode }) {
   const [feeling, setFeeling] = useState<CI["feeling"] | null>(existing?.feeling ?? null);
   const [effects, setEffects] = useState<string[]>(existing?.sideEffects ?? []);
   const [saved, setSaved] = useState(!!existing);
+  const [checkOpen, setCheckOpen] = useState(false);
+  const latest = [...episode.prescriptions].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
+  const targets = (latest?.medicines ?? []).map((med) => ({ ep: episode, med }));
+  const preset = effects.map((x) => legacyToKey[x]).filter(Boolean);
 
   const save = (f: CI["feeling"], fx: string[]) => {
     addCheckIn(episode.id, { date: today, feeling: f, sideEffects: fx });
@@ -92,9 +98,25 @@ export function CheckInCard({ episode }: { episode: Episode }) {
                 );
               })}
             </div>
+            <AnimatePresence>
+              {effects.length > 0 && targets.length > 0 && (
+                <motion.button
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setCheckOpen(true)}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-ink px-3.5 py-2 text-xs font-semibold text-white shadow-[var(--shadow-soft)]"
+                >
+                  <Sparkles className="size-3.5 text-[#8fe0a0]" />
+                  {lang === "hi" ? "किस दवा से हो रहा है? जाँचें" : "Which medicine is doing this? Check"}
+                </motion.button>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
+      <MedCheckSheet open={checkOpen} onClose={() => setCheckOpen(false)} targets={targets} initialKind="side-effect" presetSymptoms={preset} />
       <AnimatePresence>
         {saved && feeling && (
           <motion.div

@@ -6,7 +6,8 @@ import { Copy, MessageCircle, Printer, Sparkles, Check } from "lucide-react";
 import { useMemory } from "@/lib/store";
 import { catColor, episodeDays, episodeMeds, medLedger, memberEpisodes, recurringPatterns, todaysMeds } from "@/lib/insights";
 import { foodLabel, monthsShort, slotLabel } from "@/lib/i18n";
-import { SLOTS, type Episode, type Medicine } from "@/lib/types";
+import { SLOTS, type Episode, type Lang, type MedReport, type Medicine } from "@/lib/types";
+import { symptomLabel } from "@/lib/medkb";
 import { daysBetween, parseISO, todayISO } from "@/lib/util";
 import { MemberSwitch } from "@/components/Shell";
 import { Btn, Logo } from "@/components/ui";
@@ -17,6 +18,22 @@ const fmt = (s: string, lang: "en" | "hi") => {
   const d = parseISO(s);
   return `${monthsShort[lang][d.getMonth()]} ${d.getFullYear()}`;
 };
+
+/** One-line, patient-reported description of a medicine check, for the doctor. */
+export function reportLine(r: MedReport, lang: Lang) {
+  const hi = lang === "hi";
+  if (r.kind === "side-effect") {
+    const sx = [...r.symptoms.map((k) => symptomLabel[lang][k]), ...(r.other ? [r.other] : [])].join(", ");
+    const sev = r.severity ? (hi ? { mild: "हल्का", moderate: "मध्यम", severe: "तेज़" } : { mild: "mild", moderate: "moderate", severe: "severe" })[r.severity] : "";
+    const on = r.onset
+      ? (hi ? { "first-dose": "पहली खुराक से", "few-days": "कुछ दिनों बाद", later: "बाद में" } : { "first-dose": "from first dose", "few-days": "after a few days", later: "later in the course" })[r.onset]
+      : "";
+    return [hi ? `साइड इफ़ेक्ट: ${sx}` : `Side effect: ${sx}`, sev, on].filter(Boolean).join(", ");
+  }
+  const miss = r.missed && r.missed !== "none" ? (hi ? { few: "कुछ खुराक छूटीं", many: "कई खुराक छूटीं" } : { few: "missed a few doses", many: "missed many doses" })[r.missed] : hi ? "कोई खुराक नहीं छूटी" : "no missed doses";
+  const tr = r.trend ? (hi ? { same: "वैसा ही", worse: "बिगड़ रहा है", new: "नए लक्षण" } : { same: "no change", worse: "getting worse", new: "new symptoms" })[r.trend] : "";
+  return [hi ? "असर नहीं" : "Not working", tr, miss].filter(Boolean).join(", ");
+}
 
 const gname = (m: Medicine) => (m.generic ? `${m.generic} (${m.name})` : m.name);
 
@@ -29,6 +46,7 @@ export default function Brief({ episodeId }: { episodeId?: string }) {
   const current = todaysMeds(state, member.id);
   const ledger = medLedger(eps);
   const patterns = recurringPatterns(eps);
+  const reported = eps.flatMap((e) => episodeMeds(e).filter((m) => m.report).map((m) => ({ m, e, r: m.report! })));
   const [ai, setAi] = useState<Ai | null>(null);
   const [aiState, setAiState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [copied, setCopied] = useState(false);
@@ -46,7 +64,7 @@ export default function Brief({ episodeId }: { episodeId?: string }) {
         status: e.status,
         doctors: e.prescriptions.map((p) => `${p.doctor} (${p.specialty ?? ""})`),
         diagnoses: e.prescriptions.map((p) => p.diagnosis).filter(Boolean),
-        medicines: episodeMeds(e).map((m) => ({ name: m.name, generic: m.generic, patientReport: m.verdict ?? "not recorded", sideEffects: m.sideEffects })),
+        medicines: episodeMeds(e).map((m) => ({ name: m.name, generic: m.generic, patientReport: m.verdict ?? "not recorded", sideEffects: m.sideEffects, check: m.report ? { date: m.report.date, detail: reportLine(m.report, "en") } : undefined })),
       })),
     }),
     [member, focus, current, recent],
@@ -82,11 +100,16 @@ export default function Brief({ episodeId }: { episodeId?: string }) {
     if (ledger.failed.length) parts.push(`No improvement reported with ${ledger.failed.map(gname).join(", ")}.`);
     if (ledger.side.length)
       parts.push(`Side effects reported: ${ledger.side.map((m) => `${m.generic ?? m.name}${m.sideEffects?.length ? ` (${m.sideEffects.join(", ")})` : ""}`).join("; ")}.`);
+    const fails = reported.filter((x) => x.r.kind === "not-working" && x.r.missed && x.r.missed !== "none");
+    if (fails.length) parts.push(`Adherence: ${fails.map((x) => `${gname(x.m)} (${reportLine(x.r, "en").toLowerCase()})`).join("; ")}.`);
     return parts.join(" ");
-  }, [patterns, ledger]);
+  }, [patterns, ledger, reported]);
 
   const summary = ai ? (lang === "hi" ? ai.summaryHi : ai.summaryEn) : fallbackSummary;
-  const questions = ai ? (lang === "hi" ? ai.questionsHi : ai.questionsEn) : [];
+  const checkQs = Array.from(
+    new Set(reported.flatMap((x) => (x.r.analysis && x.r.analysis.lang === lang ? x.r.analysis.askDoctor.slice(0, 1) : []))),
+  );
+  const questions = Array.from(new Set([...(ai ? (lang === "hi" ? ai.questionsHi : ai.questionsEn) : []), ...checkQs])).slice(0, 6);
 
   const plain = useMemo(() => {
     const L: string[] = [];
@@ -100,12 +123,20 @@ export default function Brief({ episodeId }: { episodeId?: string }) {
       L.push("", "*Current medicines*");
       for (const c of current) L.push(`• ${c.med.name}${c.med.generic ? ` (${c.med.generic})` : ""}: ${c.med.dose}, ${c.med.frequencyCode ?? ""}`);
     }
+    if (reported.length) {
+      L.push("", "*Medicine concerns (patient-reported)*");
+      for (const x of reported) L.push(`• ${x.m.name}${x.m.generic ? ` (${x.m.generic})` : ""}: ${reportLine(x.r, "en")} (${x.r.date})`);
+    }
+    if (questions.length) {
+      L.push("", "*Questions*");
+      for (const q of questions) L.push(`• ${q}`);
+    }
     L.push("", "*History*");
     for (const e of recent.slice(0, 8))
       L.push(`• ${fmt(e.startDate, "en")}: ${e.title}, ${e.prescriptions.map((p) => p.doctor).join(" → ")}, ${e.status === "resolved" ? `${episodeDays(e)} days` : e.status}`);
     L.push("", "_Patient-reported via Rxwind. Not a clinical record._");
     return L.join("\n");
-  }, [member, focus, summary, current, recent]);
+  }, [member, focus, summary, current, recent, reported, questions]);
 
   if (!eps.length)
     return (
@@ -233,6 +264,32 @@ export default function Brief({ episodeId }: { episodeId?: string }) {
             items={ledger.side.map((m) => `${m.generic ?? m.name}${m.sideEffects?.length ? ` (${m.sideEffects.join(", ")})` : ""}`)}
           />
         </section>
+
+        {/* Medicine checks */}
+        {reported.length > 0 && (
+          <section className="mt-7">
+            <H>{lang === "hi" ? "दवा से जुड़ी शिकायतें (मरीज़ ने बताईं)" : "Medicine concerns (patient-reported)"}</H>
+            <div className="flex flex-col gap-2">
+              {reported.map(({ m, r, e }) => (
+                <div
+                  key={m.id}
+                  className="flex flex-col gap-1 rounded-2xl border-l-4 bg-canvas/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  style={{ borderColor: r.analysis?.urgent ? "#d93d4a" : r.kind === "side-effect" ? "#d98a04" : "#0f9f7a" }}
+                >
+                  <div className="min-w-0">
+                    <div className="font-semibold">
+                      {m.name} {m.generic && <span className="text-xs font-normal text-ink-3">{m.generic}</span>}
+                    </div>
+                    <div className="text-sm text-ink-2">{reportLine(r, lang)}</div>
+                  </div>
+                  <div className="shrink-0 font-mono text-xs text-ink-3">
+                    {e.title} · {r.date}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* History */}
         <section className="mt-7">

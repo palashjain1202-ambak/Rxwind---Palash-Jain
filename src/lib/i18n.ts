@@ -296,8 +296,8 @@ export const categoryLabel: Record<Lang, Record<Category, string>> = {
 };
 
 export const verdictLabel: Record<Lang, Record<Verdict, string>> = {
-  en: { helped: "Helped", "no-change": "No change", "side-effect": "Side effect", unsure: "Not sure" },
-  hi: { helped: "फ़ायदा हुआ", "no-change": "कोई फ़र्क नहीं", "side-effect": "साइड इफ़ेक्ट", unsure: "पता नहीं" },
+  en: { helped: "Helped", "no-change": "Not working", "side-effect": "Side effect", unsure: "Not sure" },
+  hi: { helped: "फ़ायदा हुआ", "no-change": "असर नहीं", "side-effect": "साइड इफ़ेक्ट", unsure: "पता नहीं" },
 };
 
 export const sideEffectOptions: Record<Lang, string[]> = {

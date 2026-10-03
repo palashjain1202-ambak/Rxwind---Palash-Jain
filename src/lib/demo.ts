@@ -1,5 +1,7 @@
 import type { CheckIn, Episode, Food, Form, Medicine, MemoryState, Prescription, Verdict } from "./types";
-import { addDays, slotsFromCode, todayISO } from "./util";
+import { addDays, daysBetween, slotsFromCode, todayISO } from "./util";
+import type { MedReport } from "./types";
+import { analyzeLocal } from "./medkb";
 
 let n = 0;
 const id = (p: string) => `${p}${++n}`;
@@ -51,6 +53,39 @@ const ci = (date: string, feeling: CheckIn["feeling"], sideEffects: string[] = [
   sideEffects,
   note,
 });
+
+const SEED: Record<string, Omit<MedReport, "date" | "analysis"> & { after: number }> = {
+  "Azee 500": { kind: "side-effect", symptoms: ["acidity"], severity: "moderate", onset: "first-dose", after: 1 },
+  "Levocet 5": { kind: "side-effect", symptoms: ["drowsy"], severity: "moderate", onset: "first-dose", after: 1 },
+  "Zerodol-P": { kind: "side-effect", symptoms: ["acidity"], severity: "moderate", onset: "few-days", after: 3 },
+  "Moxicip Eye Drops": { kind: "not-working", symptoms: [], missed: "none", asInstructed: "yes", trend: "same", after: 3 },
+};
+
+/** Gives the demo a few past medicine checks, analysed by the offline library. Idempotent. */
+export function seedReports(s: MemoryState): MemoryState {
+  let changed = false;
+  const episodes = s.episodes.map((ep) => {
+    if (ep.status !== "resolved") return ep;
+    const all = ep.prescriptions.flatMap((p) => p.medicines);
+    return {
+      ...ep,
+      prescriptions: ep.prescriptions.map((p) => ({
+        ...p,
+        medicines: p.medicines.map((m) => {
+          const seed = SEED[m.name];
+          if (!seed || m.report) return m;
+          changed = true;
+          const { after, ...rest } = seed;
+          const date = addDays(p.date, after);
+          const report: MedReport = { ...rest, date };
+          const ctx = { dayIndex: daysBetween(p.date, date) + 1, others: all.filter((o) => o.id !== m.id), diagnosis: p.diagnosis };
+          return { ...m, report: { ...report, analysis: analyzeLocal(m, report, ctx, "en") } };
+        }),
+      })),
+    };
+  });
+  return changed ? { ...s, episodes } : s;
+}
 
 export function buildDemo(): MemoryState {
   n = 0;
@@ -453,7 +488,7 @@ export function buildDemo(): MemoryState {
     ep.doses = resolved;
   }
 
-  return {
+  return seedReports({
     version: 3,
     mode: "demo",
     activeMemberId: "riya",
@@ -481,7 +516,7 @@ export function buildDemo(): MemoryState {
       },
     ],
     episodes,
-  };
+  });
 }
 
 export function emptyState(): MemoryState {

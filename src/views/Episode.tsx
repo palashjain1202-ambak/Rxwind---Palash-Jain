@@ -1,16 +1,18 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useState } from "react";
 import { ArrowLeft, CalendarDays, CircleCheckBig, FileText, MapPin, Stethoscope } from "lucide-react";
 import { useMemory } from "@/lib/store";
 import { catColor, episodeDays } from "@/lib/insights";
 import { categoryLabel, foodLabel, monthsShort, slotLabel, verdictLabel } from "@/lib/i18n";
-import { SLOTS, type Verdict } from "@/lib/types";
+import { SLOTS, type MedReport, type Medicine, type Verdict } from "@/lib/types";
 import { cx, parseISO } from "@/lib/util";
 import { CheckInCard, FeelingChart } from "@/components/CheckIn";
 import { DosePlan } from "@/components/DosePlan";
 import { CalendarButton } from "@/components/CalendarButton";
 import { Btn, Chip, FormIcon, Reveal } from "@/components/ui";
+import { MedCheckSheet, ReportChip } from "@/components/MedCheck";
 
 const fmt = (s: string, lang: "en" | "hi") => {
   const d = parseISO(s);
@@ -19,6 +21,7 @@ const fmt = (s: string, lang: "en" | "hi") => {
 
 export default function EpisodeView({ id }: { id: string }) {
   const { state, lang, t, back, go, setVerdict, resolveEpisode } = useMemory();
+  const [check, setCheck] = useState<{ med: Medicine; kind: MedReport["kind"]; saved?: boolean } | null>(null);
   const e = state.episodes.find((x) => x.id === id);
   if (!e) {
     return (
@@ -140,8 +143,18 @@ export default function EpisodeView({ id }: { id: string }) {
                                 <div className="mt-0.5 text-xs text-ink-3">{m.purpose[lang]}</div>
                               </div>
                             </div>
-                            <VerdictPicker value={m.verdict} onPick={(v) => setVerdict(e.id, m.id, v)} />
-                            {m.sideEffects?.length ? (
+                            <VerdictPicker
+                              value={m.verdict}
+                              onPick={(v) => {
+                                if (v === "helped") setVerdict(e.id, m.id, v);
+                                else setCheck({ med: m, kind: v === "side-effect" ? "side-effect" : "not-working" });
+                              }}
+                            />
+                            {m.report?.analysis ? (
+                              <div className="ml-12">
+                                <ReportChip med={m} ep={e} onOpen={() => setCheck({ med: m, kind: m.report!.kind, saved: true })} />
+                              </div>
+                            ) : m.sideEffects?.length ? (
                               <div className="ml-12 mt-1.5 text-xs font-semibold text-rose">
                                 {lang === "hi" ? "बताया: " : "Reported: "}
                                 {m.sideEffects.join(", ")}
@@ -222,6 +235,13 @@ export default function EpisodeView({ id }: { id: string }) {
           </div>
         </div>
       </div>
+      <MedCheckSheet
+        open={!!check}
+        onClose={() => setCheck(null)}
+        targets={check ? [{ ep: e, med: check.med }] : []}
+        initialKind={check?.kind}
+        showSaved={check?.saved ? { ep: e, med: check.med } : undefined}
+      />
     </div>
   );
 }

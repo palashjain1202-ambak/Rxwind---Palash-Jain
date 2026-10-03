@@ -108,7 +108,7 @@ export default function Landing() {
 
         <div className="relative">
           <HeroDemo />
-          <FloatChip className="-left-6 top-6 hidden lg:flex" delay={1.2} icon={<ShieldCheck className="size-4 text-mint" />}>
+          <FloatChip className="-top-16 left-2 hidden lg:flex" delay={1.2} icon={<ShieldCheck className="size-4 text-mint" />}>
             {lang === "hi" ? "एलर्जी जाँच: सब ठीक" : "Allergy check passed"}
           </FloatChip>
           <FloatChip className="-bottom-5 -left-6 hidden lg:flex" delay={1.6} icon={<Wind className="size-4 text-violet" />}>
